@@ -38,7 +38,7 @@ upgrade:
 
 # Create Python virtual environment .venv.
 venv:
-	[ ! -f .venv ] || python3 -m venv .venv
+	python3 -m venv .venv
 
 
 # Run tests.
