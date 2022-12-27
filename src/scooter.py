@@ -13,8 +13,8 @@ class Scooter():
     ## scooter's data
     data = {
         "id": 0,
-        "lat": 59.173228,       # coordinates
-        "lon":  17.603204,      # coordinates
+        "lat": 59.174586,       # coordinates
+        "lon":  17.602334,      # coordinates
         "speed": 0,             # km/h
         "battery": 50,          # %
         "status": "running"
@@ -71,7 +71,7 @@ class Scooter():
         self.data["lat"] = float(points[1][1:])
         self.data["lon"] = float(points[2])
         self.data["speed"] = speed
-        self.data["battery"] -= 1
+        self.data["battery"] -= 1/2
 
 
     def change_location(self) -> None:
@@ -81,8 +81,8 @@ class Scooter():
         Bearing in degrees: North: 0, East: 90, South: 180, West: 270.
         """
         ## 5 seconds is sleep time, scooter moves every 5 seconds
-        ## but for better simulation I increase it to 10
-        distance_km = self.data["speed"] * (10 / 3600)
+        ## but for better simulation I increase it to 15 seconds
+        distance_km = self.data["speed"] * (15 / 3600)
 
         ## get random position
         bearing = random.randint(0, 3)

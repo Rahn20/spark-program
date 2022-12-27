@@ -113,7 +113,7 @@ class ApiData(Scooter):
             $latitude: Float!,
             $longitude: Float!,
             $speed: Int!,
-            $battery: Int!,
+            $battery: Float!,
             $status: String!) {
                 updateScooter(
                     id: $id,
