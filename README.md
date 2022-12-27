@@ -19,7 +19,10 @@ There are two ways to get the system running: either you start all components (b
 
 Your system must have [Docker](https://www.docker.com/get-started/) enabled.
 
+You can run the beta version of the scooter program which is not connected to the API or database, and it is the user mode that runs.
+
 ```
+docker run -it ranim04/spark-program:beta
 ```
 
 ## Local
