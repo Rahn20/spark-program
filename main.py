@@ -95,7 +95,7 @@ class Handler():
 
 
     def start_scooter(self) -> None:
-        """ Move the scooter to a random location if battery > 20%. """
+        """ Move the scooter to a random location. """
         if self.scooter.check_battery():
             print("\n\033[1;31m*\033[1;0m Low battery!! the scooter needs to be charged.")
             print("\nPress 4 to end the rental and leave the scooter at charging station.")
