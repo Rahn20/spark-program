@@ -11,22 +11,43 @@ This repository is part of a group project in program development in virtual tea
 
 **The program is under development.**
 
+## Setup
 
-## Start
+There are two ways to get the system running: either you start all components (backend, frontend, mobile app and scooter program) locally, or you use the dockerized version.
+
+## Run with Docker
+
+Your system must have [Docker](https://www.docker.com/get-started/) enabled.
+
+```
+```
+
+## Local
+
+### Installation
+
+To run the scooter program locally, you need [Python](https://www.python.org/downloads/), [Pip](https://pypi.org/project/pip/) and **venv** installed on your machine. You can install **venv** by running:
+
+1. For Cygwin
+> apt-cyg install python3-virtualenv
+2. For Linux
+> apt-get install python3-venv
+3. For Brew you don't need to install anything on Mac
+
+Then you can clone this repo, go to spark-program and run:
+
+```
+make venv
+source .venv/bin/activate
+make install
+```
+
+You can deactivate venv by running: ```deactivate```
+
+### Start
 
 Run **python3 main.py** to start a ***User mode***, which means a menu of options will appear for the user to choose what to do, the program will ask the user to enter the scooter id, if the scooter is available then a menu of options will appear, and the rental time will begin.
 
-### Run with Docker
-
-```
-```
-
-
-## Simulation
+### Simulation
 
 Run **python3 simulation.py** to start a ***Simulation mode***, which means 1000 customers and 1000 scooters will be simulated.
-
-### Run with Docker
-
-```
-```
