@@ -53,7 +53,7 @@ lint:
 # Review code coverage.
 # Run the coverage module to generate the coverage data and turn the coverage data into a report.
 coverage:
-	coverage run --source=src -m unittest
+	coverage run --source=src -m test
 	coverage report -m
 
 # Run the coverage module to generate the coverage data and generate the coverage report in HTML format.
