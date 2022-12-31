@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# pylint: disable=broad-except
 
 """
 url 1: https://spark.isal.live/api/v1/
@@ -14,7 +15,7 @@ class ApiData(Scooter):
     """ Api class """
 
     ## API endpoint URL
-    _URL = "http://localhost:1337/api/v1/"
+    _URL = "http://localhost:1337/api/v1/graphql"
 
     ## Set the headers
     _HEADERS = {'Content-Type': 'application/json'}
@@ -24,122 +25,89 @@ class ApiData(Scooter):
         """ Initialize class """
         super().__init__()
         self._user_id = user_id
-        self._log_id = int
+        self._log_id = str
 
 
-    def check_scooter_status(self, scooter_id: int) -> bool:
+    def get_scooter_data(self, scooter_id: int) -> dict:
         """
-        Check scooter status. Returns true if the scooter is available
-        and adds the scooter's data to data dictionary.
+        Get scooter data from API.
         """
         ## Create the GraphQL query
-        #query = ''' query getScooterById($id: Int) {
-        #    getScooterById(id: $id) {
-        #        latitude
-        #        longitude
-        #        speed
-        #        battery
-        #        status
-        #    }
-        #} '''
-
-        #payload = {
-        #    'query': query,
-        #    'variables': {
-        #        'id': scooter_id
-        #    }
-        #}
-
-        ## Send the POST request
-        #response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        #print(response.json())
-        # print(query)
-
-        # if status == "available":
-        # self.add_scooter_data(response.json())
-        #  return True
-        # otherwise False
-
-        # returns true to test
-        self.data["id"] = scooter_id
-        return True
-
-
-    def connect_user(self) -> None:
-        """ Connect user to scooter. """
-        mutation = ''' mutation updateScooter($id: Int!, $user_id: Int!) {
-            updateScooter(id: $id, user_id: $user_id) {
-                data
+        query = ''' query getScooterById($id: String!) {
+            getScooterById(id: $id) {
+                id
+                latitude
+                longitude
+                speed
+                battery
+                status {
+                    id
+                    status
+                }
+                station {
+                    id
+                }
             }
         } '''
 
         payload = {
-            'query': mutation,
+            'query': query,
             'variables': {
-                'id': self.data["id"],
-                'user_id': self._user_id
+                'id': str(scooter_id)
             }
         }
 
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        print(response.json())
+        try:
+            ## Send the POST request
+            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
 
-
-    def remove_user_connection(self) -> None:
-        """ Remove connection between user and scooter. """
-        mutation = ''' mutation updateScooter($id: Int!, $user_id: Int!) {
-            updateScooter(id: $id, user_id: $user_id) {
-                data
-            }
-        } '''
-
-        payload = {
-            'query': mutation,
-            'variables': {
-                'id': self.data["id"],
-                'user_id': None
-            }
-        }
-
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        print(response.json())
+            return response.json()["data"]["getScooterById"][0]
+        except Exception as error:
+            print(error)
+            return 0
 
 
     def update_scooter(self) -> None:
         """ Update api with scooter's new position, speed, status and battery level. """
-        mutation = ''' mutation updateScooter(
-            $id: Int!,
-            $user_id: Int!,
-            $latitude: Float!,
-            $longitude: Float!,
-            $speed: Int!,
-            $battery: Float!,
-            $status: String!) {
-                updateScooter(
+        mutation = ''' mutation updateScooterById(
+            $id: String!,
+            $battery: String!,
+            $status_id: String!,
+            $longitude: String!,
+            $latitude: String!,
+            $price_id: String!,
+            $speed: String!,
+            $station_id: String!) {
+                updateScooterById(
                     id: $id,
-                    user_id: $user_id,
-                    latitude: $latitude,
+                    battery: $battery,
+                    status_id: $status_id,
                     longitude: $longitude,
+                    latitude: $latitude,
+                    price_id: $price_id,
                     speed: $speed,
-                    battery: $battery
-                    status: $status) { data }
+                    station_id: $station_id) { id }
         } '''
 
         payload = {
             'query': mutation,
             'variables': {
                 'id': self.data["id"],
-                'user_id': self._user_id,
-                'latitude': self.data["lat"],
-                'longitude': self.data["lon"],
-                'speed': self.data["speed"],
-                'battery': self.data["battery"],
-                'status': self.data["status"]
+                'status_id': str(self.data["status"]),
+                'latitude': str(self.data["lat"]),
+                'longitude': str(self.data["lon"]),
+                'speed': str(self.data["speed"]),
+                'battery': str(int(self.data["battery"])),
+                'station_id': str(self.data["station"]),
+                'price_id': "1"
             }
         }
 
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        print(response.json())
+        try:
+            requests.post(self._URL, json = payload, headers = self._HEADERS)
+        except Exception as error:
+            print(error)
+
 
 
     def create_log(self) -> None:
@@ -147,72 +115,80 @@ class ApiData(Scooter):
         Create log. Data to be added is scooter's position, start date/time and scooter/user id.
         """
         mutation = ''' mutation createLog(
-            $scooter_id: Int!,
-            $user_id: Int!,
-            $start_time: Datetime,
-            $start_longitude: Float!,
-            $start_latitude: Float!) {
+            $scooter_id: String!,
+            $customer_id: String!,
+            $start_time: String!,
+            $start_longitude: String!,
+            $start_latitude: String!,
+            $price_id: String!) {
                 createLog(
                     scooter_id: $scooter_id,
-                    user_id: $user_id,
+                    customer_id: $customer_id,
                     start_time: $start_time,
                     start_longitude: $start_longitude,
-                    start_latitude: $start_latitude) { id }
+                    start_latitude: $start_latitude,
+                    price_id: $price_id) { id }
         } '''
 
         payload = {
             'query': mutation,
             'variables': {
                 'scooter_id': self.data["id"],
-                'user_id': self._user_id,
-                'start_time': datetime.now(),
-                'start_longitude': self.data["lon"],
-                'start_latitude': self.data["lat"],
+                'customer_id': str(self._user_id),
+                'start_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'start_longitude': str(self.data["lon"]),
+                'start_latitude': str(self.data["lat"]),
+                'price_id': "1"
             }
         }
 
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        # save the log id
-        # self._log_id =
-        print(response.json())
+        try:
+            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+            data = response.json()["data"]["createLog"][0]
+
+            ## save the log id
+            self._log_id = data["id"]
+        except Exception as error:
+            print(error)
 
 
     def update_log(self) -> None:
         """ Update log. Data to be updated is scooter's position and end date/time. """
-        mutation = ''' mutation updateLog(
-            $id: Int!,
-            $end_time: Datetime,
-            $end_longitude: Float!,
-            $end_latitude: Float!) {
-                updateLog(
+        mutation = ''' mutation UpdateLogById(
+            $id: String!,
+            $end_time: String!,
+            $end_longitude: String!,
+            $end_latitude: String!) {
+                UpdateLogById(
                     id: $id,
                     end_time: $end_time,
-                    end_longitude: $end_longitude
-                    end_latitude: $end_latitude)
-                    { data }
+                    end_longitude: $end_longitude,
+                    end_latitude: $end_latitude) { id }
         } '''
 
         payload = {
             'query': mutation,
             'variables': {
                 'id': self._log_id,
-                'end_time': datetime.now(),
-                'end_longitude': self.data["lon"],
-                'end_latitude': self.data["lat"]
+                'end_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'end_longitude': str(self.data["lon"]),
+                'end_latitude': str(self.data["lat"]),
             }
         }
 
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        print(response.json())
+        try:
+            requests.post(self._URL, json = payload, headers = self._HEADERS)
+        except Exception as error:
+            print(error)
 
 
     def get_city_data(self) -> None:
         """
-        Get city's center position, id and area where the scooter is running.
+        Get city's center position, id and area where the scooter is located.
         And adds it to city dictionary.
         """
-        query = ''' query getCityData($scooter_id: Int) {
-            getCityData(scooter_id: $scooter_id) {
+        query = ''' query getCityByScooterId($id: String!) {
+            getCityByScooterId(id: $id) {
                 id
                 latitude
                 longitude
@@ -223,27 +199,30 @@ class ApiData(Scooter):
         payload = {
             'query': query,
             'variables': {
-                'scooter_id': self.data["id"]
+                'id': self.data["id"]
             }
         }
 
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        #
-        #self.city = {
-        #    "id": ,
-        #    "area":,      # km²
-        #    "lat": ,    # coordinates
-        #    "lon":      # coordinates
-        #}
-        print(response.json())
+        try:
+            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+            data = response.json()["data"]["getCityByScooterId"][0]
+
+            super().city["id"] = data["id"]
+            super().city["area"] = float(data["area"])
+            super().city["lat"] = float(data["latitude"])
+            super().city["lon"] = float(data["longitude"])
+
+        except Exception as error:
+            print(error)
 
 
-    def get_station(self, station_type: str) -> dict:
+    def get_station(self, zone_id: str) -> dict:
         """
-        return random charging/maintenance station data in the city where the scooter is running.
+        return random charging/maintenance station data in the city where the scooter is located.
+        Zone id: 1- Charging Station, 2- Parking Station, 3- Bike Statione, 4- Maintenance Station.
         """
-        query = ''' query getStation($city_id: Int, $type: String) {
-            getStation(city_id: $city_id, type: $type) {
+        query = ''' query getStationByCityIdAndZoneId($cityId: String!, $zoneId: String!) {
+            getStationByCityIdAndZoneId(cityId: $cityId, zoneId: $zoneId) {
                 id
                 latitude
                 longitude
@@ -253,18 +232,91 @@ class ApiData(Scooter):
         payload = {
             'query': query,
             'variables': {
-                'city_id': self.city["id"],
-                'type': station_type
+                'cityId': self.city["id"],
+                'zoneId': zone_id
             }
         }
 
-        response = requests.post(self._URL, json = payload, headers = self._HEADERS)
-        print(response.json())
-        # return the response.join() data
+        try:
+            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+
+            return response.json()["data"]["getStationByCityIdAndZoneId"][0]
+        except Exception as error:
+            print(error)
+            return 0
 
 
-    def create_scooter(self) -> None:
-        """ Create a new scooter."""
+    def add_scooter(self) -> None:
+        """ Add a new scooter."""
+        mutation = ''' mutation addScooter(
+            $battery: String!,
+            $longitude: String!,
+            $latitude: String!,
+            $price_id: String!,
+            $speed: String!,
+            $station_id: String!,
+            $status_id:String!) {
+                addScooter(
+                    battery: $battery,
+                    longitude: $longitude,
+                    latitude: $latitude,
+                    speed: $speed,
+                    price_id: $price_id,
+                    station_id: $station_id,
+                    status_id: $status_id) { id }
+        } '''
+
+        payload = {
+            'query': mutation,
+            'variables': {
+                'status_id': "1",
+                'latitude': "59.32511720",
+                'longitude': "18.07109350",
+                'speed': "0",
+                'battery': "70",
+                'station_id': "2",
+                'price_id': "1"
+            }
+        }
+
+        try:
+            requests.post(self._URL, json = payload, headers = self._HEADERS)
+        except Exception as error:
+            print(error)
+
 
     def create_user(self) -> None:
         """ Create a new user."""
+        mutation = ''' mutation createUser(
+            $first_name: String!,
+            $last_name: String!,
+            $password: String!,
+            $email: String!,
+            $phone: String!,
+            $role_id: String!) {
+                createUser(
+                    first_name: $first_name,
+                    last_name: $last_name,
+                    password: $password,
+                    email: $email,
+                    phone: $phone,
+                    role_id: $role_id) { id }
+        } '''
+
+        payload = {
+            'query': mutation,
+            'variables': {
+                'first_name': "Test",
+                'last_name': "Testing",
+                'password': "1234567891",
+                'email': "test@bth.se",
+                'phone': "0700000000",
+                'role_id': "2",
+            }
+        }
+
+        try:
+            requests.post(self._URL, json = payload, headers = self._HEADERS)
+            #print(response.json())
+        except Exception as error:
+            print(error)
