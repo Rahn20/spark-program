@@ -1,6 +1,34 @@
 #!/usr/bin/python3
 
-""" File for handling scooter data with Scooter class. """
+"""
+File for handling scooter data with Scooter class.
+
+Scooter's status id:
+1- Available
+2- Unavailable
+3- Maintenance
+4- Charging
+7- Running
+
+scooter's data
+data = {
+    "id": "1",              # scooter id (str)
+    "lat": 59.174586,       # coordinates (float)
+    "lon": 17.602334,       # coordinates   (float)
+    "speed": 0,             # km/h  (int)
+    "battery": 0,           # % (Float)
+    "status": "7"           # status id (str)
+    "station": "1"          # station id (str)
+}
+
+city's data
+city = {
+    "id": "2",            # citys id (str)
+    "area": 25.84,      # km²   (float)
+    "lat": 59.19554,    # coordinates (float)
+    "lon": 17.62525     # coordinates (float)
+}
+"""
 
 import math
 import random
@@ -11,22 +39,10 @@ class Scooter():
     """ Scooter class """
 
     ## scooter's data
-    data = {
-        "id": 0,
-        "lat": 59.174586,       # coordinates
-        "lon":  17.602334,      # coordinates
-        "speed": 0,             # km/h
-        "battery": 50,          # %
-        "status": "running"
-    }
+    data = {}
 
     ## city's data
-    city = {
-        "id": 2,
-        "area": 25.84,      # km²
-        "lat": 59.19554,    # coordinates
-        "lon": 17.62525     # coordinates
-    }
+    city = {}
 
     ## scooter's new coordinates
     location = ""
@@ -34,18 +50,6 @@ class Scooter():
 
     def __init__(self) -> None:
         """ Initialize class """
-
-
-    def add_scooter_data(self, scooter: dict) -> None:
-        """ Add scooter API data to data dictionary. """
-        self.data = {
-            "id": scooter["id"],
-            "lat": scooter["latitude"],
-            "lon":  scooter["longitude"],
-            "speed": scooter["speed"],
-            "battery": scooter["battery"],
-            "status": "running"
-        }
 
 
     def __str__(self) -> str:
@@ -57,6 +61,24 @@ class Scooter():
             self.data["speed"],
             self.data["battery"],
         )
+
+
+    def check_scooter_status(self, scooter: dict) -> bool:
+        """
+        Returns true if the scooter is available and adds the scooter's
+        data to data dictionary. Status id 7 means 'Running' and 1 'Available'
+        """
+        if scooter["status"]["id"] == "1":
+            self.data["id"] = scooter["id"]
+            self.data["lat"] = float(scooter['latitude'])
+            self.data["lon"] = float(scooter['longitude'])
+            self.data["speed"] = int(scooter['speed'])
+            self.data["battery"] = float(scooter['battery'])
+            self.data["status"] =  "7"
+            self.data["station"] = None
+
+            return True
+        return False
 
 
     def move_scooter(self) -> None:
@@ -96,7 +118,7 @@ class Scooter():
         self.location = new_location
 
 
-    def stop_scooter(self, status = "running") -> None:
+    def stop_scooter(self, status = "7") -> None:
         """ Stop the scooter from running. Change status and speed. """
         self.data["status"] = status
         self.data["speed"] = 0
@@ -111,7 +133,7 @@ class Scooter():
         """ Move the scooter to charging/maintenance station. """
         self.data["lat"] = station["latitude"]
         self.data["lon"] = station["longitude"]
-
+        self.data["station"] = station["id"]
 
     @staticmethod
     def check_maintenance() -> bool:
