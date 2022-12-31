@@ -91,7 +91,7 @@ class Handler():
             self.scooter.move_scooter()
 
             ## update API
-            #self.api.update_scooter()
+            self.api.update_scooter()
 
 
     def start_scooter(self) -> None:
@@ -111,7 +111,7 @@ class Handler():
             self.scooter.stop_scooter()
 
             ## update API
-            #self.api.update_scooter()
+            self.api.update_scooter()
 
 
     def rental_time(self) -> timedelta:
@@ -152,16 +152,15 @@ class Handler():
         self._thread.join()
 
         ## Fully charges the battery and leave it at the charging Station
-        #charging = self.api.get_station("Charging Station")
+        charging = self.api.get_station("1")
 
         self.scooter.data["battery"] = 100
-        self.scooter.stop_scooter("available")
-        #self.scooter.move_to_station(charging)
+        self.scooter.stop_scooter("1")          ## Available status
+        self.scooter.move_to_station(charging)
 
         ## update API
-        #self.api.update_scooter()
-        #self.api.update_log()
-        #self.api.remove_user_connection()
+        self.api.update_scooter()
+        self.api.update_log()
         sys.exit()
 
 
@@ -173,32 +172,28 @@ class Handler():
         self._thread.join()
         self.end_rental()
 
-        #self.get_scooter_info()
-        #print(self.scooter.data["status"])
-
         ## update API
-        #self.api.update_scooter()
-        #self.api.update_log()
-        #self.api.remove_user_connection()
+        self.api.update_scooter()
+        self.api.update_log()
         sys.exit()
 
 
     def end_rental(self) -> None:
         """ Checks scooter's battery/maintenance/zone and stops the scooter. """
         if self.scooter.check_scooter_in_city() is False:
-            self.scooter.stop_scooter("unavailable")
+            self.scooter.stop_scooter("2")                  ## Unavailable status
         elif self.scooter.check_battery():
-            #charging = self.api.get_station("Charging Station")
+            charging = self.api.get_station("1")            ## Charging Station
 
-            self.scooter.stop_scooter("charge")
-            #self.scooter.move_to_station(charging)
+            self.scooter.stop_scooter("4")                  ## Charging status
+            self.scooter.move_to_station(charging)
         elif self.scooter.check_maintenance():
-            #maintenance = self.api.get_station("Maintenance Station")
+            maintenance = self.api.get_station("4")         ## Maintenance Station
 
-            self.scooter.stop_scooter("maintenance")
-            #self.scooter.move_to_station(maintenance)
+            self.scooter.stop_scooter("3")                  ## Maintenance status
+            self.scooter.move_to_station(maintenance)
         else:
-            self.scooter.stop_scooter("available")
+            self.scooter.stop_scooter("1")                  ## Available status
 
 
     def rent_scooter(self):
@@ -222,18 +217,18 @@ class Handler():
 
             while True:
                 scooter = int(input("Enter scooter id: "))
+                data = self.api.get_scooter_data(scooter)
 
-                if self.api.check_scooter_status(scooter):
+                if self.scooter.check_scooter_status(data):
                     current = datetime.now().time().strftime("%H:%M:%S")
                     self._start_time = [int(current[:2]), int(current[3:5]), int(current[6:8])]
                     break
 
                 print("\n\033[1;31m*\033[1;0m Scooter is not available.\n")
 
-            ## connect user and create log
-            #self.api.connect_user()
-            #self.api.create_log()
-            #self.api.get_city_data()
+            ## Create log
+            self.api.create_log()
+            self.api.get_city_data()
 
             ## start a Thread
             self._thread.start()
