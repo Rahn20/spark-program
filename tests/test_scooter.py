@@ -17,16 +17,17 @@ class TestScooter(unittest.TestCase):
 
         # creates fake city and scooter data
         self.scooter.data = {
-            "id": 1,
+            "id": "1",
             "lat": 59.193475,
             "lon":  17.640142,
             "speed": 0,
-            "battery": 100,
-            "status": "running"
+            "battery": 100.0,
+            "status": "1",
+            "station": "2"
         }
 
         self.scooter.city = {
-            "id": 2,
+            "id": "2",
             "area": 25.84,
             "lat": 59.19554,
             "lon": 17.62525
@@ -38,32 +39,49 @@ class TestScooter(unittest.TestCase):
         self.scooter = None
 
 
-    def test_add_scooter_data(self):
-        """ Test to add scooter data to scooter dictionary. """
+    def test_check_scooter_status_true(self):
+        """
+        Test to return True when status id is 1 (Available)
+        and add data to scooter dictionary.
+        """
         # Act
-        self.scooter.add_scooter_data({
-            "id": 12,
-            "latitude": 59.0000,
-            "longitude":  17.00000,
-            "speed": 20,
-            "battery": 90,
+        act = self.scooter.check_scooter_status({
+            "status": {"id": "1"},
+            "id": "12",
+            "latitude": str(59.0000),
+            "longitude":  str(17.00000),
+            "speed": str(0),
+            "battery": str(90),
         })
 
         # Assert
+        self.assertTrue(act)
         self.assertEqual(self.scooter.data, {
-            "id": 12,
+            "id": "12",
             "lat": 59.0000,
             "lon":  17.00000,
-            "speed": 20,
-            "battery": 90,
-            "status": "running"
+            "speed": 0,
+            "battery": 90.0,
+            "status": "7",
+            "station": None
         })
+
+
+    def test_check_scooter_status_false(self):
+        """ Test to return False when status id is not 1 (Available) """
+        # Act
+        act = self.scooter.check_scooter_status({
+            "status": {"id": "2"},
+        })
+
+        # Assert
+        self.assertFalse(act)
 
 
     def test_return_str(self):
         """ Test to return string with scooter data. """
         # Arrange
-        expect = "Scooter id: 1\nLocation: 59.193475, 17.640142\nSpeed: 0km/h\nBattery: 100%"
+        expect = "Scooter id: 1\nLocation: 59.193475, 17.640142\nSpeed: 0km/h\nBattery: 100.0%"
 
         # Act
         actual = self.scooter.__str__()
@@ -98,10 +116,10 @@ class TestScooter(unittest.TestCase):
     def test_stop_scooter(self):
         """ Test to stop the scooter from running. """
         # Act
-        self.scooter.stop_scooter("available")
+        self.scooter.stop_scooter("2")
 
         # Assert
-        self.assertEqual(self.scooter.data["status"], "available")
+        self.assertEqual(self.scooter.data["status"], "2")
         self.assertEqual(self.scooter.data["speed"], 0)
 
 
@@ -132,11 +150,12 @@ class TestScooter(unittest.TestCase):
     def test_move_to_station(self):
         """ Test to move scooter to a specific station location. """
         # Act
-        self.scooter.move_to_station({"latitude": 44.22, "longitude":  12.99})
+        self.scooter.move_to_station({"latitude": 44.22, "longitude":  12.99, "id": "5"})
 
         # Assert
         self.assertEqual(self.scooter.data["lat"], 44.22)
         self.assertEqual(self.scooter.data["lon"], 12.99)
+        self.assertEqual(self.scooter.data["station"], "5")
 
 
     @patch('random.randint')
