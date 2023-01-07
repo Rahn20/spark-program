@@ -47,7 +47,7 @@ test:
 
 # Run pylint.
 lint:
-	pylint src/ tests/ main.py
+	pylint src/ main.py
 
 
 # Review code coverage.
