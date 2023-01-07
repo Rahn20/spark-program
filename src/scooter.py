@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-File for handling scooter data with Scooter class.
+File for handling scooter data.
 
 Scooter's status id:
 1- Available
@@ -16,14 +16,14 @@ data = {
     "lat": 59.174586,       # coordinates (float)
     "lon": 17.602334,       # coordinates   (float)
     "speed": 0,             # km/h  (int)
-    "battery": 0,           # % (Float)
+    "battery": 0,           # % (int)
     "status": "7"           # status id (str)
     "station": "1"          # station id (str)
 }
 
 city's data
 city = {
-    "id": "2",            # citys id (str)
+    "id": "2",          # citys id (str)
     "area": 25.84,      # km²   (float)
     "lat": 59.19554,    # coordinates (float)
     "lon": 17.62525     # coordinates (float)
@@ -34,6 +34,8 @@ import math
 import random
 import re
 from geopy.distance import geodesic, distance
+
+
 
 class Scooter():
     """ Scooter class """
@@ -47,6 +49,8 @@ class Scooter():
     ## scooter's new coordinates
     location = ""
 
+    ## station name
+    station = ""
 
     def __init__(self) -> None:
         """ Initialize class """
@@ -66,19 +70,57 @@ class Scooter():
     def check_scooter_status(self, scooter: dict) -> bool:
         """
         Returns true if the scooter is available and adds the scooter's
-        data to data dictionary. Status id 7 means 'Running' and 1 'Available'
+        data to data dictionary. Status id 7 means 'Running'.
         """
-        if scooter["status"]["id"] == "1":
-            self.data["id"] = scooter["id"]
-            self.data["lat"] = float(scooter['latitude'])
-            self.data["lon"] = float(scooter['longitude'])
-            self.data["speed"] = int(scooter['speed'])
-            self.data["battery"] = float(scooter['battery'])
-            self.data["status"] =  "7"
-            self.data["station"] = None
-
+        if scooter["status"]["status"] == "Available":
+            self.add_scooter_to_dict(scooter)
             return True
         return False
+
+
+    def add_scooter_to_dict(self, scooter: dict) -> None:
+        """ Adds scooter's data to the dictionary. Status id 7 means 'Running'. """
+        self.data["id"] = scooter["id"]
+        self.data["lat"] = float(scooter['latitude'])
+        self.data["lon"] = float(scooter['longitude'])
+        self.data["speed"] = int(scooter['speed'])
+        self.data["battery"] = int(scooter['battery'])
+        self.data["status"] =  "7"
+
+        self.station = scooter["station"]["station_name"]
+
+
+    def add_city_to_dict(self, city: dict):
+        """ Adds scooter's data to the dictionary. Status id 7 means 'Running'. """
+        self.city["id"] = city["id"]
+        self.city["lat"] = float(city['latitude'])
+        self.city["lon"] = float(city['longitude'])
+        self.city["area"] = float(city['area'])
+
+
+    def get_zone_id(self) -> str:
+        """
+        Returns zone id depending on the station's name type.
+        id => 1- Charging, 2- Parking, 3-Bike, 4- Maintenance zones
+        """
+        result = ""
+
+        if "Charging" in self.station:
+            result = "1"
+        elif "Parking" in self.station:
+            result = "2"
+        elif "Bike" in self.station:
+            result = "3"
+        else:
+            result = "4"
+
+        return result
+
+
+    def set_station_id(self, station: dict) -> None:
+        """ Add stations id to scooters data dictionary. """
+        self.data["station"] = station["id"]
+
 
 
     def move_scooter(self) -> None:
@@ -93,7 +135,7 @@ class Scooter():
         self.data["lat"] = float(points[1][1:])
         self.data["lon"] = float(points[2])
         self.data["speed"] = speed
-        self.data["battery"] -= 1/2
+        self.data["battery"] -= 1
 
 
     def change_location(self) -> None:
@@ -131,8 +173,8 @@ class Scooter():
 
     def move_to_station(self, station: dict) -> None:
         """ Move the scooter to charging/maintenance station. """
-        self.data["lat"] = station["latitude"]
-        self.data["lon"] = station["longitude"]
+        self.data["lat"] = float(station["latitude"])
+        self.data["lon"] = float(station["longitude"])
         self.data["station"] = station["id"]
 
     @staticmethod
