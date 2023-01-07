@@ -4,8 +4,14 @@
 
 import unittest
 from unittest.mock import patch
+import json
 
 from src.scooter import Scooter
+
+
+# dummy data
+with open('tests/dummy.json', 'r', encoding='utf-8') as file:
+    DATA = json.load(file)
 
 
 class TestScooter(unittest.TestCase):
@@ -21,9 +27,9 @@ class TestScooter(unittest.TestCase):
             "lat": 59.193475,
             "lon":  17.640142,
             "speed": 0,
-            "battery": 100.0,
+            "battery": 100,
             "status": "1",
-            "station": "2"
+            #"station": "2"
         }
 
         self.scooter.city = {
@@ -41,53 +47,125 @@ class TestScooter(unittest.TestCase):
 
     def test_check_scooter_status_true(self):
         """
-        Test to return True when status id is 1 (Available)
-        and add data to scooter dictionary.
+        Test to return True when scooter status is Available.
         """
         # Act
-        act = self.scooter.check_scooter_status({
-            "status": {"id": "1"},
-            "id": "12",
-            "latitude": str(59.0000),
-            "longitude":  str(17.00000),
-            "speed": str(0),
-            "battery": str(90),
-        })
+        act = self.scooter.check_scooter_status(DATA[0]["add_scooter_to_dict"])
 
         # Assert
         self.assertTrue(act)
-        self.assertEqual(self.scooter.data, {
-            "id": "12",
-            "lat": 59.0000,
-            "lon":  17.00000,
-            "speed": 0,
-            "battery": 90.0,
-            "status": "7",
-            "station": None
-        })
 
 
     def test_check_scooter_status_false(self):
-        """ Test to return False when status id is not 1 (Available) """
+        """ Test to return False when scooter status is not Available """
         # Act
         act = self.scooter.check_scooter_status({
-            "status": {"id": "2"},
+            "status": {"status": "Charging"},
         })
 
         # Assert
         self.assertFalse(act)
 
 
+    def test_add_scooter_to_dict(self):
+        """ Test to add scooters data to scooter dictionary. """
+        # Act
+        self.scooter.add_scooter_to_dict(DATA[0]["add_scooter_to_dict"])
+
+        # Assert
+        self.assertEqual(self.scooter.data, {
+            "id": "12",
+            "lat": 59.0000,
+            "lon":  17.00000,
+            "speed": 0,
+            "battery": 90,
+            "status": "7",
+        })
+
+        self.assertEqual(self.scooter.station, "Stockholm charging station")
+
+
     def test_return_str(self):
         """ Test to return string with scooter data. """
         # Arrange
-        expect = "Scooter id: 1\nLocation: 59.193475, 17.640142\nSpeed: 0km/h\nBattery: 100.0%"
+        expect = "Scooter id: 1\nLocation: 59.193475, 17.640142\nSpeed: 0km/h\nBattery: 100%"
 
         # Act
         actual = self.scooter.__str__()
 
         # Assert
         self.assertEqual(actual, expect)
+
+
+    def test_add_city_to_dict(self):
+        """ Test to add citys data to city dictionary."""
+        # Act
+        self.scooter.add_city_to_dict(DATA[0]["add_city_to_dict"])
+
+        # Assert
+        self.assertEqual(self.scooter.city, {
+            "id": "2",
+            "area": 25.84,
+            "lat": 59.19554,
+            "lon": 17.62525
+        })
+
+
+    def test_get_zone_id_charging(self):
+        """ Test to return zone id depending when the station has the type Charging. """
+        # Arrange
+        self.scooter.station = "Stockholm Charging station"
+
+        # Act
+        act = self.scooter.get_zone_id()
+
+        # Assert
+        self.assertEqual(act, "1")
+
+
+    def test_get_zone_id_parking(self):
+        """ Test to return zone id depending when the station has the type Parking. """
+        # Arrange
+        self.scooter.station = "Stockholm Parking station"
+
+        # Act
+        act = self.scooter.get_zone_id()
+
+        # Assert
+        self.assertEqual(act, "2")
+
+
+    def test_get_zone_id_bike(self):
+        """ Test to return zone id depending when the station has the type Bike. """
+        # Arrange
+        self.scooter.station = "Stockholm Bike station"
+
+        # Act
+        act = self.scooter.get_zone_id()
+
+        # Assert
+        self.assertEqual(act, "3")
+
+
+    def test_set_station_id(self):
+        """ Test to add stations id to scooters data dictionary """
+        # Act
+        self.scooter.set_station_id({"id": "20"})
+
+        # Assert
+        self.assertEqual(self.scooter.data["station"], "20")
+
+
+    def test_get_zone_id_maintenance(self):
+        """ Test to return zone id depending when the station has the type Maintenance. """
+        # Arrange
+        self.scooter.station = "Stockholm Maintenance station"
+
+        # Act
+        act = self.scooter.get_zone_id()
+
+        # Assert
+        self.assertEqual(act, "4")
 
 
     def test_move_scooter(self):
@@ -101,7 +179,7 @@ class TestScooter(unittest.TestCase):
         # Assert
         self.assertEqual(self.scooter.data["lat"], 56.00000)
         self.assertEqual(self.scooter.data["lon"], 18.0000)
-        self.assertEqual(self.scooter.data["battery"], 99.5)
+        self.assertEqual(self.scooter.data["battery"], 99)
 
 
     def test_change_location(self):
