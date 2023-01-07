@@ -1,0 +1,82 @@
+[
+    {
+        "getScooterById": [
+            {
+                "id": "1",
+                "latitude": "59.174586",
+                "longitude": "17.602334",
+                "speed": "0",
+                "battery": "75",
+                "status": {
+                        "id": "1",
+                        "status": "Available"
+                    },
+                "station": {
+                    "id": "1",
+                    "station_name":"Stockholm charging station"
+                }
+            }
+        ],
+
+        "getCityByScooterId": [
+            {
+                "id": "23",
+                "latitude" : "59.19554",
+                "longitude": "17.62525",
+                "area": "25.84"
+            }
+        ],
+
+        "getStationByCityIdAndZoneId": [
+            {
+                "id": "15",
+                "latitude": "59.2334",
+                "longitude": "18.33334"
+            }
+        ],
+
+        "getAllCustomers": [
+            {
+                "id": "2",
+                "first_name": "Test",
+                "last_name": "Testing",
+                "email": "testing@bth.s",
+                "username": "tt23",
+                "phone": "0700000000",
+                "role": "Customer"
+            },
+
+            {
+                "id": "4",
+                "first_name": "Test2",
+                "last_name": "Testing2",
+                "email": "testing2@bth.s",
+                "username": "tt35",
+                "phone": "0700000000",
+                "role": "Customer"
+            }
+        ],
+
+        "add_scooter_to_dict": {
+            "id": "12",
+            "latitude": "59.0000",
+            "longitude":  "17.00000",
+            "speed": "0",
+            "battery": "90",
+            "status": {
+                "status": "Available"
+            },
+            "station": {
+                "station_name": "Stockholm charging station"
+            }
+        },
+
+        "add_city_to_dict": {
+            "id": "2",
+            "area": "25.84",
+            "latitude": "59.19554",
+            "longitude": "17.62525"
+        }
+
+    }
+]
