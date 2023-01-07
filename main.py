@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+#flake8 --extend-ignore=R1723
 
 """ Main file for scooter program with Handler class. """
 
@@ -10,7 +11,6 @@ from datetime import datetime, timedelta
 
 from src.api import ApiData
 from src.scooter import Scooter
-
 
 class Handler():
     """ Handler class """
@@ -71,7 +71,7 @@ class Handler():
             if self._return:
                 break
             if self.scooter.check_scooter_in_city() is False:
-                print("\nScooter is outside of the city")
+                print("\nScooter is outside of the city\n")
                 print("You can't use the scooter anymore. Press 4 to cancel the rental.")
 
                 self.stop_running()
@@ -210,6 +210,26 @@ class Handler():
             input("\nPress any key to continue ...")
 
 
+    def start(self):
+        """
+        Makes requests to the API, creates log, gets cities and
+        stations data. start a thread and view rent menu.
+        """
+        ## get info from api
+        self.api.create_log()
+        city = self.api.get_city_data()
+        self.scooter.add_city_to_dict(city)
+
+        ## get station
+        zone = self.scooter.get_zone_id()
+        station = self.api.get_station(zone)
+        self.scooter.set_station_id(station)
+
+        ## start a Thread and show a rent menu
+        self._thread.start()
+        self.rent_scooter()
+
+
     def main(self):
         """ Main method """
         try:
@@ -219,21 +239,17 @@ class Handler():
                 scooter = int(input("Enter scooter id: "))
                 data = self.api.get_scooter_data(scooter)
 
-                if self.scooter.check_scooter_status(data):
-                    current = datetime.now().time().strftime("%H:%M:%S")
-                    self._start_time = [int(current[:2]), int(current[3:5]), int(current[6:8])]
-                    break
+                try:
+                    if self.scooter.check_scooter_status(data):
+                        current = datetime.now().time().strftime("%H:%M:%S")
+                        self._start_time = [int(current[:2]), int(current[3:5]), int(current[6:8])]
+                        break
 
-                print("\n\033[1;31m*\033[1;0m Scooter is not available.\n")
+                    print("\n\033[1;31m*\033[1;0m Scooter is not available.\n")
+                except TypeError:
+                    print("\nScooter does not exist.\n")
 
-            ## Create log
-            self.api.create_log()
-            self.api.get_city_data()
-
-            ## start a Thread
-            self._thread.start()
-            self.rent_scooter()
-
+            self.start()
         except ValueError:
             print("\nScooter id must be a number.")
 
