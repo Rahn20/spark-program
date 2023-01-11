@@ -38,28 +38,31 @@ class Simulation():
         """ Move scooters around the cities. Simulation time is 2 minutes. """
         end_time = time.time() + 120    # 2 minutes
 
+        print("\nStep 2 - Moving scooters . . . . . . . .")
+
         while time.time() <= end_time:
             count = 0
 
             while count < len(self._scooter_id):
-                id = self._scooter_id[count]
-                data = self.api.get_scooter_data(scooter_id = id)
+                data = self.api.get_scooter_data(self._scooter_id[count])
 
                 self.scooter.add_scooter_to_dict(data)
                 self.scooter.add_city_to_dict(self._city_data[count])
                 self.scooter.set_station_id(self._station_id[count])
+                
+                count = self.run(count)
 
-
-                self.run(count, id)
                 count += 1
-                time.sleep(0.001)
+                time.sleep(0.003)
 
 
-    def run(self, count: int, id: int):
+    def run(self, count: int) -> int:
         """
         Check if the scooter is inside the city and check battery level, if TRUE
         the scooter will be returned otherwise the scooter will continue moving.
         """
+        id = self._scooter_id[count]
+
         if self.scooter.check_scooter_in_city() is False:
             print("\nScooter {} is outside of the city\n".format(id))
             print("Scooter {} will be returned.".format(id))
@@ -89,6 +92,7 @@ class Simulation():
             self.scooter.move_scooter()
             self.api.update_scooter()
 
+        return count
 
     def end(self, count):
         """
@@ -102,27 +106,31 @@ class Simulation():
         self.api.update_log()
 
 
+
     def return_scooters(self):
         """ All scooters will be returned when simulation time ends. """
         count = 0
 
+        print("\nStep 3 - Returning scooters . . . . . . . .")
+        print("\nThe simulation has finished, the scooters will be returned.\n")
+
         while count < len(self._scooter_id):
-            id = self._scooter_id[count]
-            data = self.api.get_scooter_data(scooter_id = id)
+            data = self.api.get_scooter_data(self._scooter_id[count])
 
             self.scooter.add_scooter_to_dict(data)
             self.scooter.add_city_to_dict(self._city_data[count])
             self.scooter.set_station_id(self._station_id[count])
-
             self.end(count)
-            time.sleep(0.001)
+
             count += 1
+            time.sleep(0.003)
 
 
     def main(self, total:int):
         """ Start simulation program. """
         print("\n************ Welcome to Scooter simulation program **************\n")
-        print("\nSimulation time is 2 minutes, do not try to break/stop the program.\n")
+        print("\nThe simulation takes around 3 minutes, do not try to break/stop the program.\n")
+        print("\nStep 1 - Renting scooters . . . . . . . .")
 
         all_customers = self.api.get_all_customers()
 
@@ -133,6 +141,7 @@ class Simulation():
             data = self.api.get_scooter_data(scooter_id = count)
 
             if self.scooter.check_scooter_status(data):
+                # get city
                 city = self.api.get_city_data()
                 self.scooter.add_city_to_dict(city)
                 self._city_data.append(city)
@@ -143,7 +152,7 @@ class Simulation():
                 self.api.create_log()
                 self._log_id.append(self.api.log_id)
 
-                ## get station
+                # get station
                 zone = self.scooter.get_zone_id()
                 station = self.api.get_station(zone)
                 self._station_id.append(station)
@@ -160,4 +169,4 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    Simulation().main(497)
+    Simulation().main(1000)
