@@ -4,21 +4,25 @@
 """
 URL: http://localhost:1337/api/v1/
 """
-
+import os
 from datetime import datetime
 import requests
 
 from src.scooter import Scooter
 
+
+url = os.environ.get("API_URL")
+
+
 class ApiData(Scooter):
     """ Api class """
 
-    ## API endpoint URL
-    _URL = "http://localhost:1337/api/v1/graphql"
+    # API endpoint URL
 
-    ## Set the headers
+    _URL = "http://localhost:1337/api/v1/graphql" if url is None else url
+
+    # Set the headers
     _HEADERS = {'Content-Type': 'application/json'}
-
 
     def __init__(self, user_id: int) -> None:
         """ Initialize class """
@@ -26,12 +30,11 @@ class ApiData(Scooter):
         self.user_id = user_id
         self.log_id = ""
 
-
     def get_scooter_data(self, scooter_id: int) -> dict:
         """
         Get scooter data from API.
         """
-        ## Create the GraphQL query
+        # Create the GraphQL query
         query = ''' query getScooterById($id: String!) {
             getScooterById(id: $id) {
                 id
@@ -58,13 +61,13 @@ class ApiData(Scooter):
         }
 
         try:
-            ## Send the POST request
-            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+            # Send the POST request
+            response = requests.post(
+                self._URL, json=payload, headers=self._HEADERS)
 
             return response.json()["data"]["getScooterById"][0]
         except (Exception, ConnectionError):
             return -1
-
 
     def update_scooter(self) -> None:
         """ Update api with scooter's new position, speed, status and battery level. """
@@ -103,11 +106,9 @@ class ApiData(Scooter):
         }
 
         try:
-            requests.post(self._URL, json = payload, headers = self._HEADERS)
+            requests.post(self._URL, json=payload, headers=self._HEADERS)
         except (Exception, ConnectionError) as error:
             print(error)
-
-
 
     def create_log(self) -> None:
         """
@@ -139,13 +140,13 @@ class ApiData(Scooter):
         }
 
         try:
-            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+            response = requests.post(
+                self._URL, json=payload, headers=self._HEADERS)
 
-            ## save the log id
+            # save the log id
             self.log_id = response.json()["data"]["createLog"]["id"]
         except (Exception, ConnectionError) as error:
             print(error)
-
 
     def update_log(self) -> None:
         """ Update log. Data to be updated is scooter's position and end date/time. """
@@ -172,10 +173,9 @@ class ApiData(Scooter):
         }
 
         try:
-            requests.post(self._URL, json = payload, headers = self._HEADERS)
+            requests.post(self._URL, json=payload, headers=self._HEADERS)
         except (Exception, ConnectionError) as error:
             print(error)
-
 
     def get_city_data(self) -> dict:
         """
@@ -199,12 +199,12 @@ class ApiData(Scooter):
         }
 
         try:
-            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+            response = requests.post(
+                self._URL, json=payload, headers=self._HEADERS)
 
             return response.json()["data"]["getCityByScooterId"][0]
         except (Exception, ConnectionError):
             return -1
-
 
     def get_station(self, zone_id: str) -> dict:
         """
@@ -228,19 +228,20 @@ class ApiData(Scooter):
         }
 
         try:
-            response = requests.post(self._URL, json = payload, headers = self._HEADERS)
+            response = requests.post(
+                self._URL, json=payload, headers=self._HEADERS)
 
             return response.json()["data"]["getStationByCityIdAndZoneId"][0]
         except (Exception, ConnectionError):
             return -1
-
 
     def get_all_customers(self) -> list:
         """ Get all customers data from API. """
         query = ''' query { getAllCustomers { id } }'''
 
         try:
-            response = requests.post(self._URL, json = {'query': query}, headers = self._HEADERS)
+            response = requests.post(
+                self._URL, json={'query': query}, headers=self._HEADERS)
 
             return response.json()["data"]["getAllCustomers"]
         except (Exception, ConnectionError):
