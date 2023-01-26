@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 # pylint: disable=broad-except
 
-"""
-URL: http://localhost:1337/api/v1/
-"""
+""" Get and update from the API """
+
 import os
-from datetime import datetime
 import requests
 
 from src.scooter import Scooter
@@ -16,24 +14,22 @@ url = os.environ.get("API_URL")
 
 class ApiData(Scooter):
     """ Api class """
-
     # API endpoint URL
-
     _URL = "http://localhost:1337/api/v1/graphql" if url is None else url
 
     # Set the headers
-    _HEADERS = {'Content-Type': 'application/json'}
+    _HEADERS = { "Content-Type": "application/json"}
+
 
     def __init__(self, user_id: int) -> None:
         """ Initialize class """
         super().__init__()
         self.user_id = user_id
-        self.log_id = ""
+        self.station = ""
+
 
     def get_scooter_data(self, scooter_id: int) -> dict:
-        """
-        Get scooter data from API.
-        """
+        """ Get scooter data from API. """
         # Create the GraphQL query
         query = ''' query getScooterById($id: String!) {
             getScooterById(id: $id) {
@@ -62,15 +58,15 @@ class ApiData(Scooter):
 
         try:
             # Send the POST request
-            response = requests.post(
-                self._URL, json=payload, headers=self._HEADERS)
+            response = requests.post(self._URL, json=payload, headers=self._HEADERS)
 
             return response.json()["data"]["getScooterById"][0]
         except (Exception, ConnectionError):
             return -1
 
+
     def update_scooter(self) -> None:
-        """ Update api with scooter's new position, speed, status and battery level. """
+        """ Update api with all scooters data. """
         mutation = ''' mutation updateScooterById(
             $id: String!,
             $battery: String!,
@@ -110,65 +106,37 @@ class ApiData(Scooter):
         except (Exception, ConnectionError) as error:
             print(error)
 
-    def create_log(self) -> None:
-        """
-        Create log. Data to be added is scooter's position, start date/time and scooter/user id.
-        """
-        mutation = ''' mutation createLog(
-            $scooter_id: String!,
-            $customer_id: String!,
-            $start_longitude: String!,
-            $start_latitude: String!,
-            $price_id: String!) {
-                createLog(
-                    scooter_id: $scooter_id,
-                    customer_id: $customer_id,
-                    start_longitude: $start_longitude,
-                    start_latitude: $start_latitude,
-                    price_id: $price_id) { id }
-        } '''
 
-        payload = {
-            'query': mutation,
-            'variables': {
-                'scooter_id': self.data["id"],
-                'customer_id': str(self.user_id),
-                'start_longitude': str(self.data["lon"]),
-                'start_latitude': str(self.data["lat"]),
-                'price_id': "1"
-            }
-        }
-
-        try:
-            response = requests.post(
-                self._URL, json=payload, headers=self._HEADERS)
-
-            # save the log id
-            self.log_id = response.json()["data"]["createLog"]["id"]
-        except (Exception, ConnectionError) as error:
-            print(error)
-
-    def update_log(self) -> None:
-        """ Update log. Data to be updated is scooter's position and end date/time. """
-        mutation = ''' mutation updateLogByLogId(
+    def update_rented_scooter(self) -> None:
+        """ Update api with scooter's new position, speed, status and battery level. """
+        mutation = ''' mutation updateRentedScooterById(
             $id: String!,
-            $end_time: String!,
-            $end_longitude: String!,
-            $end_latitude: String!) {
-                updateLogByLogId(
+            $battery: String!,
+            $status_id: String!,
+            $longitude: String!,
+            $latitude: String!,
+            $speed: String!) {
+                updateRentedScooterById(
                     id: $id,
-                    end_time: $end_time,
-                    end_longitude: $end_longitude,
-                    end_latitude: $end_latitude) { id }
+                    battery: $battery,
+                    status_id: $status_id,
+                    longitude: $longitude,
+                    latitude: $latitude,
+                    speed: $speed)
+                    {
+                        id
+                    }
         } '''
 
         payload = {
             'query': mutation,
             'variables': {
-                'id': self.log_id,
-                'end_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'end_longitude': str(self.data["lon"]),
-                'end_latitude': str(self.data["lat"]),
+                'id': self.data["id"],
+                'status_id': str(self.data["status"]),
+                'latitude': str(self.data["lat"]),
+                'longitude': str(self.data["lon"]),
+                'speed': str(self.data["speed"]),
+                'battery': str(self.data["battery"]),
             }
         }
 
@@ -176,6 +144,87 @@ class ApiData(Scooter):
             requests.post(self._URL, json=payload, headers=self._HEADERS)
         except (Exception, ConnectionError) as error:
             print(error)
+
+
+    def rent_scooter(self) -> None:
+        """
+        Create log. Data to be added is scooter's position, start date/time and scooter/user id.
+        """
+        mutation = ''' mutation rentScooter(
+            $id: String!,
+            $user_id: String!,
+            $longitude: String!,
+            $latitude: String!) {
+                rentScooter(
+                    id: $id,
+                    user_id: $user_id,
+                    longitude: $longitude,
+                    latitude: $latitude)
+                    { 
+                        id 
+                        success
+                    }
+        } '''
+
+        payload = {
+            'query': mutation,
+            'variables': {
+                'id': self.data["id"],
+                'user_id': str(self.user_id),
+                'longitude': str(self.data["lon"]),
+                'latitude': str(self.data["lat"]),
+            }
+        }
+
+        try:
+            response = requests.post(self._URL, json=payload, headers=self._HEADERS)
+
+            # save the station
+            self.station = response.json()["data"]["rentScooter"]["success"]
+        except (Exception, ConnectionError) as error:
+            print(error)
+
+
+    def return_scooter(self, time: int) -> None:
+        """
+        Create log. Data to be added is scooter's position, start date/time and scooter/user id.
+        """
+        mutation = ''' mutation returnScooter(
+            $id: String!,
+            $user_id: String!,
+            $longitude: String!,
+            $latitude: String!,
+            $time: String!,
+            $station: String!) {
+                returnScooter(
+                    id: $id,
+                    user_id: $user_id,
+                    longitude: $longitude,
+                    latitude: $latitude,
+                    time: $time,
+                    station: $station)
+                    { 
+                        success
+                    }
+        } '''
+
+        payload = {
+            'query': mutation,
+            'variables': {
+                'id': self.data["id"],
+                'user_id': str(self.user_id),
+                'longitude': str(self.data["lon"]),
+                'latitude': str(self.data["lat"]),
+                'time': str(time),
+                'station': self.station
+            }
+        }
+
+        try:
+            requests.post(self._URL, json=payload, headers=self._HEADERS)
+        except (Exception, ConnectionError) as error:
+            print(error)
+
 
     def get_city_data(self) -> dict:
         """
@@ -199,12 +248,12 @@ class ApiData(Scooter):
         }
 
         try:
-            response = requests.post(
-                self._URL, json=payload, headers=self._HEADERS)
+            response = requests.post(self._URL, json=payload, headers=self._HEADERS)
 
             return response.json()["data"]["getCityByScooterId"][0]
         except (Exception, ConnectionError):
             return -1
+
 
     def get_station(self, zone_id: str) -> dict:
         """
@@ -228,21 +277,8 @@ class ApiData(Scooter):
         }
 
         try:
-            response = requests.post(
-                self._URL, json=payload, headers=self._HEADERS)
+            response = requests.post(self._URL, json=payload, headers=self._HEADERS)
 
             return response.json()["data"]["getStationByCityIdAndZoneId"][0]
-        except (Exception, ConnectionError):
-            return -1
-
-    def get_all_customers(self) -> list:
-        """ Get all customers data from API. """
-        query = ''' query { getAllCustomers { id } }'''
-
-        try:
-            response = requests.post(
-                self._URL, json={'query': query}, headers=self._HEADERS)
-
-            return response.json()["data"]["getAllCustomers"]
         except (Exception, ConnectionError):
             return -1
