@@ -40,17 +40,15 @@ from geopy.distance import geodesic, distance
 class Scooter():
     """ Scooter class """
 
-    ## scooter's data
+    # scooter's data
     data = {}
 
-    ## city's data
+    # city's data
     city = {}
 
-    ## scooter's new coordinates
+    # scooter's new coordinates
     location = ""
 
-    ## station name
-    station = ""
 
     def __init__(self) -> None:
         """ Initialize class """
@@ -70,7 +68,7 @@ class Scooter():
     def check_scooter_status(self, scooter: dict) -> bool:
         """
         Returns true if the scooter is available and adds the scooter's
-        data to data dictionary. Status id 7 means 'Running'.
+        data to data dictionary.
         """
         if scooter["status"]["status"] == "Available":
             self.add_scooter_to_dict(scooter)
@@ -87,8 +85,6 @@ class Scooter():
         self.data["battery"] = int(scooter['battery'])
         self.data["status"] =  "7"
 
-        self.station = scooter["station"]["station_name"]
-
 
     def add_city_to_dict(self, city: dict):
         """ Adds scooter's data to the dictionary. Status id 7 means 'Running'. """
@@ -98,37 +94,12 @@ class Scooter():
         self.city["area"] = float(city['area'])
 
 
-    def get_zone_id(self) -> str:
-        """
-        Returns zone id depending on the station's name type.
-        id => 1- Charging, 2- Parking, 3-Bike, 4- Maintenance zones
-        """
-        result = ""
-
-        if "Charging" in self.station:
-            result = "1"
-        elif "Parking" in self.station:
-            result = "2"
-        elif "Bike" in self.station:
-            result = "3"
-        else:
-            result = "4"
-
-        return result
-
-
-    def set_station_id(self, station: dict) -> None:
-        """ Add stations id to scooters data dictionary. """
-        self.data["station"] = station["id"]
-
-
-
     def move_scooter(self) -> None:
         """
         Move the scooter from one position to another and reduce battery level.
         Max scooter speed is 20km/h.
         """
-        ## get random speed
+        # get random speed
         speed = random.randrange(1, 21)
         points = re.split("Point|, ", self.location)
 
@@ -144,11 +115,11 @@ class Scooter():
         Speed = distance ÷ time => distance = speed * time
         Bearing in degrees: North: 0, East: 90, South: 180, West: 270.
         """
-        ## 5 seconds is sleep time, scooter moves every 5 seconds
-        ## but for better simulation I increase it to 15 seconds
+        # 5 seconds is sleep time, scooter moves every 5 seconds
+        # but for better simulation I increase it to 15 seconds
         distance_km = self.data["speed"] * (15 / 3600)
 
-        ## get random position
+        # get random position
         bearing = random.randint(0, 3)
         degrees = [0, 90, 180, 270]
 
@@ -177,6 +148,7 @@ class Scooter():
         self.data["lon"] = float(station["longitude"])
         self.data["station"] = station["id"]
 
+
     @staticmethod
     def check_maintenance() -> bool:
         """
@@ -193,7 +165,7 @@ class Scooter():
         Check if scooter is inside the city zone. If the distance between
         two points 'city center and scooter' <= circle radius return True.
         """
-        ## Circle Area = pi * r^2 => r^2 = A/pi
+        # Circle Area = pi * r^2 => r^2 = A/pi
         radius = math.sqrt((self.city["area"] / math.pi))
         scooter = (self.data["lat"], self.data["lon"])
         city = (self.city["lat"], self.city["lon"])
