@@ -3,6 +3,7 @@
 
 """ Main file for scooter program with Handler class. """
 
+import math
 import sys
 import inspect
 import time
@@ -15,7 +16,7 @@ from src.scooter import Scooter
 class Handler():
     """ Handler class """
 
-    ## menu options
+    # menu options
     _OPTIONS = {
         "1": "start_scooter",
         "2": "stop_running",
@@ -24,22 +25,22 @@ class Handler():
         "5": "charge_scooter",
     }
 
-    ## scooter status
+    # scooter status
     _running = False
 
-    ## Leave the scooter, stop the thread
+    # Leave the scooter, stop the thread
     _return = False
 
-    ## start renting time, a list of integers [H:M:S]
-    _start_time = None
+    # start renting time, a list of integers [H:M:S]
+    start_time = None
 
 
     def __init__(self) -> None:
         """ Initialize class """
         self.scooter = Scooter()
-        self.api = ApiData(user_id = 1)   ## user id (random user)
+        self.api = ApiData(user_id = 6)   # user id (random user)
 
-        ## create a Thread
+        # create a Thread
         self._thread = Thread(target=self.run, name="Move scooter")
 
 
@@ -66,7 +67,7 @@ class Handler():
 
 
     def run(self) -> None:
-        """ Start a Thread. """
+        """ Starts a Thread. """
         while True:
             if self._return:
                 break
@@ -82,7 +83,7 @@ class Handler():
 
 
     def battery_check(self) -> None:
-        """ Check battery level, if battery < 20% print warning message and stop the scooter. """
+        """ Checks battery level, if battery < 20% print warning message and stop the scooter. """
         if self.scooter.check_battery():
             self.stop_running()
             print("\n\033[1;31m*\033[1;0m Low battery!! the scooter needs to be charged.")
@@ -90,8 +91,8 @@ class Handler():
             self.scooter.change_location()
             self.scooter.move_scooter()
 
-            ## update API
-            self.api.update_scooter()
+            # update API
+            self.api.update_rented_scooter()
 
 
     def start_scooter(self) -> None:
@@ -110,8 +111,8 @@ class Handler():
             self._running = False
             self.scooter.stop_scooter()
 
-            ## update API
-            self.api.update_scooter()
+            # update API
+            self.api.update_rented_scooter()
 
 
     def rental_time(self) -> timedelta:
@@ -121,13 +122,13 @@ class Handler():
         current_time = timedelta(
             hours = int(current[0:2]),
             minutes = int(current[3:5]),
-            seconds=int(current[6:8])
+            seconds = int(current[6:8])
         )
 
         start_time = timedelta(
-            hours = self._start_time[0],
-            minutes = self._start_time[1],
-            seconds = self._start_time[2]
+            hours = self.start_time[0],
+            minutes = self.start_time[1],
+            seconds = self.start_time[2]
         )
 
         return current_time - start_time
@@ -144,56 +145,70 @@ class Handler():
         print("Rent time: " + str(self.rental_time()))
 
 
-    def charge_scooter(self):
+    def charge_scooter(self) -> None:
         """Charge the scooter and end the rental. """
-        ## Stop thread
+        # Stop thread
         self._return = True
         self._running = False
         self._thread.join()
 
-        ## Fully charges the battery and leave it at the charging Station
+        # Fully charges the battery and leave it at the charging Station
         charging = self.api.get_station("1")
 
         self.scooter.data["battery"] = 100
-        self.scooter.stop_scooter("1")          ## Available status
+        self.scooter.stop_scooter(status = "1")          # Available status
         self.scooter.move_to_station(charging)
 
-        ## update API
+
+        # update API
+        self.api.return_scooter(math.ceil(self.rental_time().seconds / 60))
         self.api.update_scooter()
-        self.api.update_log()
         sys.exit()
 
 
     def return_scooter(self):
         """ Stop the rental and leave the scooter. """
-        ## Stop thread
+        # Stop thread
         self._return = True
         self._running = False
         self._thread.join()
-        self.end_rental()
 
-        ## update API
-        self.api.update_scooter()
-        self.api.update_log()
+        self.end_rental()
         sys.exit()
 
 
     def end_rental(self) -> None:
         """ Checks scooter's battery/maintenance/zone and stops the scooter. """
         if self.scooter.check_scooter_in_city() is False:
-            self.scooter.stop_scooter("2")                  ## Unavailable status
+            self.scooter.stop_scooter(status = "2")                  ## Unavailable status
+
+            # update API
+            self.api.return_scooter(math.ceil(self.rental_time().seconds / 60))
+            self.api.update_rented_scooter()
         elif self.scooter.check_battery():
-            charging = self.api.get_station("1")            ## Charging Station
+            charging = self.api.get_station("1")                     ## Charging Station
 
-            self.scooter.stop_scooter("4")                  ## Charging status
+            self.scooter.stop_scooter(status = "4")                  ## Charging status
             self.scooter.move_to_station(charging)
-        elif self.scooter.check_maintenance():
-            maintenance = self.api.get_station("4")         ## Maintenance Station
 
-            self.scooter.stop_scooter("3")                  ## Maintenance status
+            # update api
+            self.api.return_scooter(math.ceil(self.rental_time().seconds / 60))
+            self.api.update_scooter()
+        elif self.scooter.check_maintenance():
+            maintenance = self.api.get_station("4")                  ## Maintenance Station
+
+            self.scooter.stop_scooter(status = "3")                  ## Maintenance status
             self.scooter.move_to_station(maintenance)
+
+            # update api
+            self.api.return_scooter(math.ceil(self.rental_time().seconds / 60))
+            self.api.update_scooter()
         else:
-            self.scooter.stop_scooter("1")                  ## Available status
+            self.scooter.stop_scooter(status = "1")                  ## Available status
+
+            # update API
+            self.api.return_scooter(math.ceil(self.rental_time().seconds / 60))
+            self.api.update_rented_scooter()
 
 
     def rent_scooter(self):
@@ -215,17 +230,14 @@ class Handler():
         Makes requests to the API, creates log, gets cities and
         stations data. start a thread and view rent menu.
         """
-        ## get info from api
-        self.api.create_log()
+        # Create new payment/log and update customer's account
+        self.api.rent_scooter()
+
+        # get city data and add it to dict
         city = self.api.get_city_data()
         self.scooter.add_city_to_dict(city)
 
-        ## get station
-        zone = self.scooter.get_zone_id()
-        station = self.api.get_station(zone)
-        self.scooter.set_station_id(station)
-
-        ## start a Thread and show a rent menu
+        # start a Thread and show a rent menu
         self._thread.start()
         self.rent_scooter()
 
@@ -241,8 +253,9 @@ class Handler():
 
                 try:
                     if self.scooter.check_scooter_status(data):
+                        # Start renting time
                         current = datetime.now().time().strftime("%H:%M:%S")
-                        self._start_time = [int(current[:2]), int(current[3:5]), int(current[6:8])]
+                        self.start_time = [int(current[:2]), int(current[3:5]), int(current[6:8])]
                         break
 
                     print("\n\033[1;31m*\033[1;0m Scooter is not available.\n")
