@@ -96,44 +96,75 @@ class TestApi(unittest.TestCase):
         self.assertEqual(captured_output.getvalue(), 'Request failed update scooter\n')
 
 
+    @patch('requests.post')
+    def test_update_rented_scooter_success(self, mock_post):
+        """ Test to return None and get nothing printed when request succeeds."""
+        mock_post.return_value.json.return_value = {
+            'data': { None }
+        }
+
+        captured_output = StringIO()
+        sys.stdout = captured_output
+
+        act = self.api.update_rented_scooter()
+
+        sys.stdout = sys.__stdout__
+
+        self.assertIsNone(act)
+        self.assertEqual(captured_output.getvalue(), '')
+
 
     @patch('requests.post')
-    def test_create_log_success(self, mock_post):
+    def test_update_scooter_error(self, mock_post):
+        """ Test to print error message when request fails. """
+        mock_post.side_effect = Exception('Request failed update rented scooter')
+
+        captured_output = StringIO()
+        sys.stdout = captured_output
+        self.api.update_rented_scooter()
+        sys.stdout = sys.__stdout__
+
+        # Check that the output is correct
+        self.assertEqual(captured_output.getvalue(), 'Request failed update rented scooter\n')
+
+
+    @patch('requests.post')
+    def test_rent_scooter_success(self, mock_post):
         """ Test to return None and get log id updated when request succeeds."""
         self.api.user_id = "3"
 
         mock_post.return_value.json.return_value = {
             'data': {
-                'createLog': { "id": "190" }
+                'rentScooter': { "success": "Station" }
             }
         }
-        act = self.api.create_log()
+        act = self.api.rent_scooter()
 
         self.assertIsNone(act)
-        self.assertEqual(self.api.log_id, "190")
+        self.assertEqual(self.api.station, "Station")
 
 
     @patch('requests.post')
-    def test_create_log_error(self, mock_post):
+    def test_rent_scooter_error(self, mock_post):
         """ Test to print error message when request fails. """
         self.api.user_id = "3"
         mock_post.side_effect = Exception('Request failed')
 
         captured_output = StringIO()
         sys.stdout = captured_output
-        self.api.create_log()
+        self.api.rent_scooter()
         sys.stdout = sys.__stdout__
 
         # Check that the output is correct
         self.assertEqual(captured_output.getvalue(), 'Request failed\n')
-        self.assertEqual(self.api.log_id, "")
+        self.assertEqual(self.api.station, "")
 
 
 
     @patch('requests.post')
-    def test_update_log_success(self, mock_post):
+    def test_return_scooter_success(self, mock_post):
         """ Test to return None and get nothing printed when request succeeds. """
-        self.api.log_id = "12"
+        self.api.station = "Station"
 
         mock_post.return_value.json.return_value = {
             'data': { None }
@@ -142,7 +173,7 @@ class TestApi(unittest.TestCase):
         captured_output = StringIO()
         sys.stdout = captured_output
 
-        act = self.api.update_log()
+        act = self.api.return_scooter(time = 3)
 
         sys.stdout = sys.__stdout__
         self.assertIsNone(act)
@@ -150,14 +181,14 @@ class TestApi(unittest.TestCase):
 
 
     @patch('requests.post')
-    def test_update_log_error(self, mock_post):
+    def test_return_scooter_error(self, mock_post):
         """ Test to print error message when request fails. """
-        self.api.log_id = "12"
+        self.api.station = "Station"
         mock_post.side_effect = Exception('Request failed update log')
 
         captured_output = StringIO()
         sys.stdout = captured_output
-        self.api.update_log()
+        self.api.return_scooter(time = 2)
         sys.stdout = sys.__stdout__
 
         # Check that the output is correct
@@ -212,28 +243,5 @@ class TestApi(unittest.TestCase):
 
         mock_post.side_effect = ConnectionError('Connection failed')
         act = self.api.get_station(zone_id = "2")
-
-        self.assertEqual(act, -1)
-
-
-    @patch('requests.post')
-    def test_get_all_customers_success(self, mock_post):
-        """ Test to return all customers API data when request succeeds."""
-        mock_post.return_value.json.return_value = {
-            'data': {
-                'getAllCustomers': DATA[0]["getAllCustomers"]
-            }
-        }
-
-        customers_data = self.api.get_all_customers()
-
-        self.assertEqual(customers_data, DATA[0]["getAllCustomers"])
-
-
-    @patch('requests.post')
-    def test_get_all_customers_error(self, mock_post):
-        """ Test to return -1 when request fails. """
-        mock_post.side_effect = ConnectionError('Connection failed')
-        act = self.api.get_all_customers()
 
         self.assertEqual(act, -1)
