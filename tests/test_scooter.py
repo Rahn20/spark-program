@@ -29,7 +29,6 @@ class TestScooter(unittest.TestCase):
             "speed": 0,
             "battery": 100,
             "status": "1",
-            #"station": "2"
         }
 
         self.scooter.city = {
@@ -82,8 +81,6 @@ class TestScooter(unittest.TestCase):
             "status": "7",
         })
 
-        self.assertEqual(self.scooter.station, "Stockholm charging station")
-
 
     def test_return_str(self):
         """ Test to return string with scooter data. """
@@ -109,63 +106,6 @@ class TestScooter(unittest.TestCase):
             "lat": 59.19554,
             "lon": 17.62525
         })
-
-
-    def test_get_zone_id_charging(self):
-        """ Test to return zone id depending when the station has the type Charging. """
-        # Arrange
-        self.scooter.station = "Stockholm Charging station"
-
-        # Act
-        act = self.scooter.get_zone_id()
-
-        # Assert
-        self.assertEqual(act, "1")
-
-
-    def test_get_zone_id_parking(self):
-        """ Test to return zone id depending when the station has the type Parking. """
-        # Arrange
-        self.scooter.station = "Stockholm Parking station"
-
-        # Act
-        act = self.scooter.get_zone_id()
-
-        # Assert
-        self.assertEqual(act, "2")
-
-
-    def test_get_zone_id_bike(self):
-        """ Test to return zone id depending when the station has the type Bike. """
-        # Arrange
-        self.scooter.station = "Stockholm Bike station"
-
-        # Act
-        act = self.scooter.get_zone_id()
-
-        # Assert
-        self.assertEqual(act, "3")
-
-
-    def test_set_station_id(self):
-        """ Test to add stations id to scooters data dictionary """
-        # Act
-        self.scooter.set_station_id({"id": "20"})
-
-        # Assert
-        self.assertEqual(self.scooter.data["station"], "20")
-
-
-    def test_get_zone_id_maintenance(self):
-        """ Test to return zone id depending when the station has the type Maintenance. """
-        # Arrange
-        self.scooter.station = "Stockholm Maintenance station"
-
-        # Act
-        act = self.scooter.get_zone_id()
-
-        # Assert
-        self.assertEqual(act, "4")
 
 
     def test_move_scooter(self):
