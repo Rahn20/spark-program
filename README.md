@@ -2,20 +2,17 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Rahn20/spark-program/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/Rahn20/spark-program/?branch=main)
 [![Code Coverage](https://scrutinizer-ci.com/g/Rahn20/spark-program/badges/coverage.png?b=main)](https://scrutinizer-ci.com/g/Rahn20/spark-program/?branch=main)
 [![Build Status](https://scrutinizer-ci.com/g/Rahn20/spark-program/badges/build.png?b=main)](https://scrutinizer-ci.com/g/Rahn20/spark-program/build-status/main)
-[![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
-
+[![Pylint](https://github.com/Rahn20/spark-program/actions/workflows/pylint.yml/badge.svg)](https://github.com/Rahn20/spark-program/actions/workflows/pylint.yml)
 
 # Scooter program
 
-This repository is part of a group project in program development in virtual team course (vteam) at [Blekinge Institute of Technology](https://www.bth.se/). The group project consists of several parts, and this is one of them, which we call **The intelligence of the scooter**. 
-
+This repository is part of a group project in program development in virtual team course (Vteam) at [Blekinge Institute of Technology](https://www.bth.se/). The group project consists of several parts, and this is one of them, which we call **The intelligence of the scooter**. 
 
 ![rent view](doc/running.png)  
 
-
 ## Setup
 
-There are two ways to get the system running: either you start all components (backend, frontend (admin), mobile app, webclient customer and scooter program) locally, or you use the dockerized version.
+There are two ways to get the system running: either you start all components (backend, frontend (admin), mobile app, customer webclient and scooter program) locally, or you use the dockerized version.
 
 ## Run with Docker
 
@@ -27,7 +24,7 @@ You can run the beta version of the scooter program which is not connected to th
 docker run -it ranim04/spark-program:beta
 ```
 
-You can run the main or simulation program connected to the API, but you need to run the backend before running this program. This program is a part of a large system. You can find all subsystems along with ***docker-compose.yml*** in this [repository](https://github.com/sumca252/spark).
+You can run the main or simulation program connected to the API, but you need to run the backend before running the program. This program is part of a large system. You can find all subsystems along with ***docker-compose.yml*** in this [repository](https://github.com/sumca252/spark).
 
 ```
 # User mode
@@ -41,9 +38,16 @@ docker-compose run spark-simulation
 
 Path /spark-program
 
+Build and run main program
 ```
-docker build -t scooter-program .
-docker run --rm -it scooter-program
+docker build -f Dockerfile_main -t main-program .
+docker run --rm -it main-program
+```
+
+Build and run simulation program
+```
+docker build -f Dockerfile_simulation -t simulation-program .
+docker run --rm -it simulation-program
 ```
 
 ## Local
