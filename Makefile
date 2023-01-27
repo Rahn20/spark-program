@@ -47,7 +47,7 @@ test:
 
 # Run pylint.
 lint:
-	pylint src/ main.py
+	pylint src/ main.py simulation.py
 
 
 # Review code coverage.

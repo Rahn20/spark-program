@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# pylint: disable=no-value-for-parameter
 
 """
 Mainprogram for scooter simulation
@@ -65,24 +66,27 @@ class Simulation():
         del self._station[count]
         del self._user_id[count]
         del self._city_data[count]
-    
+
 
     def run(self, count: int) -> int:
         """
         Checks if the scooter is inside the city and check battery level, if TRUE
         the scooter will be returned otherwise the scooter will continue moving.
         """
-        id = self._scooter_id[count]
+        scooter_id = self._scooter_id[count]
 
         if self.scooter.check_scooter_in_city() is False:
-            print("\nScooter {} is outside of the city\n".format(id))
-            print("Scooter {} will be returned.".format(id))
+            print("\nScooter {} is outside of the city\n".format(scooter_id))
+            print("Scooter {} will be returned.".format(scooter_id))
 
             self.delete_and_remove()
             count -= 1
         elif self.scooter.check_battery():
-            print("\n\033[1;31m*\033[1;0m Low battery!! the scooter {} needs to be charged.".format(id))
-            print("Scooter {} will be returned.".format(id))
+            print(
+                "\n\033[1;31m*\033[1;0m Low battery!! the scooter {} needs to be charged."
+                .format(id)
+            )
+            print("Scooter {} will be returned.".format(scooter_id))
 
             self.delete_and_remove()
             count -= 1
@@ -134,7 +138,7 @@ class Simulation():
         count = 1
 
         # user id 6 means customer id 1, start counting from 6
-        user = 6 
+        user = 6
 
         while count <= total:
             data = self.api.get_scooter_data(scooter_id = count)
