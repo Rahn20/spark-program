@@ -63,7 +63,6 @@ class TestApi(unittest.TestCase):
         self.assertEqual(act, -1)
 
 
-
     @patch('requests.post')
     def test_update_scooter_success(self, mock_post):
         """ Test to return None and get nothing printed when request succeeds."""
@@ -115,7 +114,7 @@ class TestApi(unittest.TestCase):
 
 
     @patch('requests.post')
-    def test_update_scooter_error(self, mock_post):
+    def test_update_rented_scooter_error(self, mock_post):
         """ Test to print error message when request fails. """
         mock_post.side_effect = Exception('Request failed update rented scooter')
 
