@@ -8,7 +8,8 @@
 
 This repository is part of a group project in program development in virtual team course (Vteam) at [Blekinge Institute of Technology](https://www.bth.se/). The group project consists of several parts, and this is one of them, which we call **The intelligence of the scooter**. 
 
-![rent view](doc/running.png)  
+[![asciicast](https://asciinema.org/a/dVP96TY4iN0H9gaCcrv85gzzk.svg)](https://asciinema.org/a/dVP96TY4iN0H9gaCcrv85gzzk?t=3)
+
 
 ## Setup
 
